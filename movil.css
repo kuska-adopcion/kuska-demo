@@ -1,0 +1,15 @@
+/* Ajuste para celulares reales. Solo tamaño del contenedor: no cambia pantallas, colores, letras, personajes, toques ni animaciones. */
+/* 1) La app ocupa todo el celular: ancho completo y alto visible (100dvh, con 100vh de respaldo) */
+html,body{width:100%;height:100%;overflow:hidden;overscroll-behavior:none}
+#stage{position:fixed;inset:0}
+#phone{width:100%;height:100vh;height:100dvh;max-width:none;max-height:none;border-radius:0;box-shadow:none}
+/* en computadora sigue la columna centrada con ancho de celular */
+@media (min-width:560px){#phone{width:min(100vw,402px,calc(100dvh * 402 / 874));height:100vh;height:100dvh}}
+/* 2) Pantallas de alto fijo (bienvenida, intro, login, plan, etc.): a ancho completo; si el celular es más bajo, se desplazan hacia abajo en vez de achicarse */
+.fr.fit{--u:calc(100cqw / 402);width:100%;height:max(100cqh,calc(var(--u) * 874))}
+/* 3) Juego: a ancho completo, con desplazamiento vertical si no entra */
+.fr.g390{--u:calc(100cqw / 390);width:100%;height:calc(var(--u) * 844)}
+/* 4) Barra de navegación: queda pegada abajo y sube lo justo para no quedar debajo de la línea de inicio del celular */
+#bar{height:calc(100cqw / 4.02 * 1.34 + env(safe-area-inset-bottom,0px))}
+/* 5) Sin desplazamiento horizontal */
+.scr{overflow-x:hidden;overscroll-behavior:contain}

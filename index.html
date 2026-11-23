@@ -1,0 +1,515 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
+<meta name="theme-color" content="#ffffff">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>KUSKA demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&family=Quicksand:wght@500;600;700&display=swap">
+<style>
+:root{
+  --ink:#34296D; --ink2:#282055; --acc:#735BF2; --acc-press:#5C47C8; --acc-mid:#6852DA; --acc-soft:#D4CCFB; --acc-faint:#F1EFFE;
+  --link:#5C49C2; --pale:#D4CCFB; --lila:#F7F5FF; --brand:#C15DE5; --plum:#9146AC; --pink:#F9EFFC; --lime:#D2E05A;
+  --display:'Quicksand',system-ui,sans-serif; --text:'Poppins',system-ui,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--lila:#F7F5FF}}
+:root[data-theme="dark"]{--lila:#F7F5FF}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:#ECE8FB;color:var(--ink);font-family:var(--text);font-weight:300;-webkit-font-smoothing:antialiased;overflow:hidden}
+button{font:inherit;color:inherit}
+/* sin marco de celular: en el celular ocupa la pantalla; en computadora columna centrada con ancho de celular */
+#stage{position:fixed;inset:0;display:flex;justify-content:center;align-items:flex-start;background:#fff}
+#phone{position:relative;overflow:hidden;background:#fff;container-type:size;
+  width:100vw;height:100vh;height:calc(100dvh - env(safe-area-inset-bottom,0px));--u:calc(100cqw / 402)}
+@media (min-width:560px){
+  #stage{background:#ECE8FB}
+  #phone{width:min(100vw,402px,calc(100dvh * 402 / 874));height:100vh;height:100dvh}
+}
+#status{display:none!important}
+/* unidades del frame Figma (402 de ancho) */
+.scr{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;background:var(--bg,#fff);-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.scr::-webkit-scrollbar{display:none}
+.fr{position:relative;width:100%;--u:calc(100cqw / 402)}
+.fr.fit{--u:min(calc(100cqw / 402),calc(100cqh / 874));width:calc(var(--u) * 402);height:calc(var(--u) * 874);margin:0 auto}
+.a{position:absolute}
+.ctr{text-align:center}
+img{display:block;user-select:none;-webkit-user-drag:none}
+.msk{display:block;-webkit-mask-size:100% 100%;mask-size:100% 100%;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;background:currentColor}
+
+/* transiciones suaves entre pantallas */
+.scr.in{animation:sin .42s cubic-bezier(.22,.8,.24,1) both}
+.scr.out{animation:sout .3s ease both;pointer-events:none}
+@keyframes sin{from{opacity:0;transform:translateX(calc(var(--dx,1) * 28px))}to{opacity:1;transform:none}}
+@keyframes sout{to{opacity:0;transform:translateX(calc(var(--dx,1) * -18px))}}
+@media (prefers-reduced-motion:reduce){.scr.in,.scr.out{animation-duration:.01s}}
+
+/* barra de estado del teléfono */
+#status{position:absolute;left:0;right:0;top:0;height:calc(var(--u) * 50);z-index:30;pointer-events:none;background:var(--sbg,transparent);transition:background .3s}
+#status b{position:absolute;left:calc(var(--u) * 49.5);top:calc(var(--u) * 26);font:600 calc(var(--u) * 16)/1 var(--text);color:var(--ink2);letter-spacing:-.01em}
+#status i{position:absolute;left:calc(var(--u) * 298);top:calc(var(--u) * 25);width:calc(var(--u) * 78);height:calc(var(--u) * 16);color:var(--ink2)}
+
+/* tipografía */
+.h-disp{font-family:var(--display);color:var(--ink)}
+.p{font-family:var(--text);font-weight:300;color:var(--ink)}
+
+/* botones del UI kit */
+.btn{border:0;border-radius:999px;background:var(--acc);color:#fff;font:700 calc(var(--u) * 16)/1 var(--display);cursor:pointer;
+  box-shadow:0 calc(var(--u) * 4) calc(var(--u) * 10) calc(var(--u) * -4) rgba(115,91,242,.55);transition:background .15s,transform .15s;-webkit-tap-highlight-color:transparent}
+.btn:hover{background:#6A51EE}.btn:active{background:var(--acc-press);transform:scale(.985)}
+.go{display:flex;align-items:center;justify-content:center}
+.go .c{position:absolute;left:calc(var(--u) * 4);top:calc(var(--u) * 4);width:calc(var(--u) * 42);height:calc(var(--u) * 42);border-radius:50%;background:#fff;color:var(--acc);display:grid;place-items:center;transition:transform .4s cubic-bezier(.3,1.4,.5,1)}
+.go:hover .c{transform:translateX(calc(var(--u) * 3))}
+.round{border:0;border-radius:50%;background:var(--acc);color:#fff;display:grid;place-items:center;cursor:pointer;box-shadow:0 calc(var(--u) * 4) calc(var(--u) * 10) calc(var(--u) * -4) rgba(115,91,242,.6);transition:transform .2s}
+.round:hover{transform:translateX(calc(var(--u) * 2))}.round:active{transform:scale(.94)}
+.lnk{border:0;background:none;padding:0;cursor:pointer;font:400 calc(var(--u) * 15)/1.4 var(--text);color:var(--link)}
+.lnk:hover{text-decoration:underline;text-underline-offset:3px}
+.foot{display:flex;justify-content:center;align-items:center;gap:calc(var(--u) * 8);font:300 calc(var(--u) * 13)/1 var(--text)}
+.foot .lnk{font-size:calc(var(--u) * 13);font-weight:300}
+.foot .lnk.g{color:var(--pale)} .foot .dot{color:var(--pale)}
+:focus-visible{outline:3px solid var(--brand);outline-offset:3px;border-radius:12px}
+
+/* pager */
+.dots{display:flex;gap:calc(var(--u) * 4);align-items:center}
+.dots button{width:calc(var(--u) * 8);height:calc(var(--u) * 8);border-radius:9px;border:0;padding:0;background:#F1EFFE;cursor:pointer;transition:width .35s cubic-bezier(.3,1.3,.5,1),background .3s}
+.dots button.on{width:calc(var(--u) * 16);background:var(--acc)}
+
+/* Kuska: solo movimiento, nunca redibujado */
+.kuska{cursor:pointer;transform-origin:50% 90%;-webkit-tap-highlight-color:transparent}
+.float{animation:float 3.6s ease-in-out infinite}
+@keyframes float{50%{transform:translateY(calc(var(--u) * -5))}}
+.hop{animation:hop .5s cubic-bezier(.3,1.6,.5,1)}
+@keyframes hop{30%{transform:translateY(calc(var(--u) * -10)) scale(1.03,.97)}60%{transform:translateY(0) scale(.98,1.02)}}
+.wiggle{animation:wig .6s ease}
+@keyframes wig{20%{transform:rotate(-6deg)}45%{transform:rotate(5deg)}70%{transform:rotate(-3deg)}}
+.pop-in{animation:popin .6s cubic-bezier(.3,1.5,.5,1) both}
+@keyframes popin{from{opacity:0;transform:scale(.6) translateY(calc(var(--u) * 20))}}
+.rise{animation:rise 1.1s cubic-bezier(.2,.9,.25,1) .15s both}
+@keyframes rise{from{transform:translateY(60%)}}
+.fadeup{animation:fadeup .7s ease both}
+@keyframes fadeup{from{opacity:0;transform:translateY(calc(var(--u) * 10))}}
+.shake{animation:shake .4s ease}
+@keyframes shake{25%{transform:translateX(calc(var(--u) * -6))}50%{transform:translateX(calc(var(--u) * 5))}75%{transform:translateX(calc(var(--u) * -3))}}
+
+/* campos */
+.field{border:0;border-bottom:1px solid var(--acc-mid);background:none;outline:none;padding:0 0 calc(var(--u) * 8);font:300 calc(var(--u) * 15)/1.3 var(--text);color:var(--ink);border-radius:0;transition:border-color .2s}
+.field::placeholder{color:var(--acc-mid);opacity:1}
+.field:focus{border-bottom:2px solid var(--acc);padding-bottom:calc(var(--u) * 7)}
+.field.err{border-bottom-color:var(--brand)}
+.hint{font:400 calc(var(--u) * 12)/1.3 var(--text);color:var(--brand);opacity:0;transform:translateY(-4px);transition:.25s}
+.hint.on{opacity:1;transform:none}
+.eye{border:0;background:none;padding:0;cursor:pointer;color:var(--pale);transition:color .2s}
+.eye.on{color:var(--acc)}
+
+/* carrusel de tarjetas del registro */
+.car{overflow:visible;touch-action:pan-y}
+.track{position:absolute;left:0;top:0;height:100%;display:flex;transition:transform .8s cubic-bezier(.25,.9,.3,1)}
+.track.drag{transition:none}
+.card{position:relative;flex:none;width:calc(var(--u) * 300);height:calc(var(--u) * 300);margin-right:calc(var(--u) * 6);background:url(img/blob.webp) center/100% 100% no-repeat;filter:drop-shadow(0 calc(var(--u) * 6) calc(var(--u) * 14) rgba(115,91,242,.06));transition:opacity .6s,transform .8s cubic-bezier(.25,.9,.3,1)}
+.card h3{position:absolute;left:0;right:0;top:calc(var(--u) * 46);margin:0;text-align:center;font:700 calc(var(--u) * 21)/calc(var(--u) * 40) var(--display);color:var(--ink2)}
+.card .q{position:absolute;left:calc(var(--u) * 45);right:calc(var(--u) * 45);top:calc(var(--u) * 86);text-align:center;font:300 calc(var(--u) * 14)/calc(var(--u) * 24) var(--text);color:#BFB8EA}
+.card .op{position:absolute;left:calc(var(--u) * 50.5);width:calc(var(--u) * 200);height:calc(var(--u) * 45);border-radius:999px;cursor:pointer;
+  font:300 calc(var(--u) * 15)/1 var(--text);color:#8F86C9;background:var(--acc-faint);border:1.5px solid transparent;box-shadow:0 calc(var(--u) * 3) calc(var(--u) * 6) calc(var(--u) * -3) rgba(115,91,242,.25);transition:all .25s ease}
+.card .op.on{background:var(--acc-soft);border-color:var(--acc);color:var(--acc);font-weight:500}
+.card .op:active{transform:scale(.97)}
+.cdots{display:flex;align-items:center;justify-content:center;gap:calc(var(--u) * 11)}
+.cdots button{border:0;padding:0;border-radius:50%;cursor:pointer;width:calc(var(--u) * 17);height:calc(var(--u) * 17);background:#EAE6FD;color:#fff;display:grid;place-items:center;transition:width .35s cubic-bezier(.3,1.3,.5,1),height .35s cubic-bezier(.3,1.3,.5,1),background .3s}
+.cdots button.on{width:calc(var(--u) * 53);height:calc(var(--u) * 53);background:var(--acc);box-shadow:0 calc(var(--u) * 4) calc(var(--u) * 10) calc(var(--u) * -4) rgba(115,91,242,.6)}
+#cbig{position:relative;cursor:default}
+#cbig span{position:absolute;inset:0;display:grid;place-items:center;transform:scale(0) rotate(-30deg);opacity:0;transition:transform .45s cubic-bezier(.3,1.4,.5,1),opacity .25s}
+#cbig span.on{transform:none;opacity:1}
+
+/* Inicio */
+.bell{border:0;background:none;padding:0;cursor:pointer;color:var(--pale)}
+.bell:hover{color:var(--acc)}
+.hero{border-radius:calc(var(--u) * 10);overflow:hidden;
+  background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,0)),
+    radial-gradient(120% 140% at 0% 0%,#E4D9FB 0%,transparent 60%),radial-gradient(120% 140% at 100% 0%,#F5E6FA 0%,transparent 60%),
+    radial-gradient(120% 140% at 0% 100%,#D7CFFB 0%,transparent 60%),radial-gradient(120% 140% at 100% 100%,#F4E5FA 0%,transparent 60%),#ECDFFB;
+  box-shadow:0 calc(var(--u) * 6) calc(var(--u) * 12) calc(var(--u) * -6) rgba(115,91,242,.35)}
+.mini{white-space:nowrap;padding:0;border:1.3px solid var(--acc-mid);background:#fff;color:var(--acc-mid);border-radius:999px;font:600 calc(var(--u) * 10.5)/1 var(--display);cursor:pointer;transition:background .2s,color .2s}
+.mini:hover{background:var(--acc-mid);color:#fff}
+.kcard{background:#fff;border-radius:calc(var(--u) * 4)}
+.bar{border-radius:9px;background:var(--pink);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--plum);border-radius:9px;transition:width 1s cubic-bezier(.3,.9,.3,1)}
+.stats{display:flex;border-radius:calc(var(--u) * 8);background:var(--pink)}
+.stats>*{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:calc(var(--u) * 8);position:relative;border:0;background:none;padding:0;color:inherit}
+.stats>*+*::before{content:"";position:absolute;left:0;top:calc(var(--u) * 12);bottom:calc(var(--u) * 12);width:1.5px;background:var(--plum)}
+.stats b{font:700 calc(var(--u) * 19)/1 var(--display);color:var(--brand)}
+.stats span{font:300 calc(var(--u) * 13)/1 var(--text);color:var(--ink)}
+.stats.done{background:var(--plum)} .stats.done b,.stats.done span{color:#fff} .stats.done>*+*::before{background:rgba(255,255,255,.55)}
+.stats button{cursor:pointer}
+.tip{transition:opacity .35s,transform .35s}
+.tip.gone{opacity:0;transform:scale(.96);pointer-events:none}
+.x{border:0;padding:0;border-radius:50%;background:#E3DEFC;color:var(--acc);display:grid;place-items:center;cursor:pointer}
+.bubble{background:var(--lime);border-radius:calc(var(--u) * 10);display:flex;align-items:center;padding:0 calc(var(--u) * 18);font:300 calc(var(--u) * 12)/1.35 var(--text);color:var(--ink2)}
+.bubble b{font-weight:600}
+.tile{background:#fff;border:0;border-radius:calc(var(--u) * 6);box-shadow:0 calc(var(--u) * 3) calc(var(--u) * 10) calc(var(--u) * -4) rgba(145,70,172,.25);cursor:pointer;color:var(--plum);
+  display:flex;flex-direction:column;align-items:center;transition:transform .2s,box-shadow .2s}
+.tile:hover{transform:translateY(-2px);box-shadow:0 calc(var(--u) * 8) calc(var(--u) * 14) calc(var(--u) * -6) rgba(145,70,172,.35)}
+.tile span{font:300 calc(var(--u) * 11)/1.2 var(--text);text-align:center}
+.friends{display:flex;gap:calc(var(--u) * 12);overflow-x:auto;scrollbar-width:none;padding:0 calc(var(--u) * 20);scroll-snap-type:x mandatory}
+.friends::-webkit-scrollbar{display:none}
+.friends button{flex:none;border:0;padding:0;background:none;width:calc(var(--u) * 100);height:calc(var(--u) * 100);border-radius:50%;overflow:hidden;cursor:pointer;scroll-snap-align:start;transition:transform .2s}
+.friends button:hover{transform:scale(1.03)}
+.friends img{width:100%;height:100%}
+.locked .friends button{opacity:.38;cursor:default}
+.locked .friends button:hover{transform:none}
+
+/* Mi plan */
+.seg{display:flex;position:relative}
+.seg i{position:absolute;top:0;left:0;height:100%;border-radius:999px;background:var(--acc);transition:transform .4s cubic-bezier(.3,1.2,.5,1),width .4s cubic-bezier(.3,1.2,.5,1);box-shadow:0 calc(var(--u) * 4) calc(var(--u) * 10) calc(var(--u) * -4) rgba(115,91,242,.6)}
+.seg button{position:relative;z-index:1;border:0;background:none;cursor:pointer;font:600 calc(var(--u) * 14)/1 var(--display);color:#A292F7;transition:color .3s;white-space:nowrap}
+.seg button.on{color:#fff}
+.ib{border:0;background:none;padding:0;cursor:pointer;color:var(--ink2)}
+
+/* barra de navegación (del UI kit) */
+#bar{position:absolute;left:0;right:0;bottom:0;height:calc(100cqw / 4.02 * 1.34);z-index:20;transition:transform .45s cubic-bezier(.22,.8,.24,1),opacity .3s;pointer-events:none}
+#bar.hide{transform:translateY(110%);opacity:0}
+#bar>*{pointer-events:auto}
+.nb-pill{position:absolute;left:calc(24.5cqw/4.02);width:calc(351.5cqw/4.02);top:calc(36.5cqw/4.02);height:calc(52.5cqw/4.02);border-radius:999px;background:#fff;border:1px solid #ECE9F6;box-shadow:0 6px 22px -10px rgba(40,32,85,.25)}
+.nb-it{position:absolute;top:calc(38cqw/4.02);height:calc(48cqw/4.02);width:calc(70cqw/4.02);translate:-50% 0;border:0;background:none;padding:0;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:calc(5cqw/4.02);color:#8B8B8B;-webkit-tap-highlight-color:transparent}
+.nb-it i{display:block;background:#7B7B7B;-webkit-mask-size:100% 100%;mask-size:100% 100%;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;transition:background .25s,transform .35s cubic-bezier(.3,1.5,.5,1)}
+.nb-it span{font-family:var(--display);font-weight:500;font-size:calc(8.6cqw/4.02);line-height:1;transition:color .25s;white-space:nowrap}
+.nb-it.on{color:var(--acc)} .nb-it.on i{background:var(--acc);transform:translateY(-2px)}
+.nb-c{position:absolute;left:calc(171.25cqw/4.02);top:calc(23.25cqw/4.02);width:calc(58cqw/4.02);height:calc(58cqw/4.02);border:0;padding:0;background:none;border-radius:50%;cursor:pointer;filter:drop-shadow(0 4px 8px rgba(115,91,242,.35));transition:transform .2s;-webkit-tap-highlight-color:transparent}
+.nb-c:active{transform:scale(.93)} .nb-c img{width:100%;height:100%}
+.nb-home{position:absolute;left:calc(137cqw/4.02);width:calc(131cqw/4.02);top:calc(100cqw/4.02);height:calc(4cqw/4.02);border-radius:9px;background:#D9D9D9}
+
+/* aviso breve */
+#toast{position:absolute;left:50%;bottom:calc(var(--u) * 150);translate:-50% 0;z-index:40;max-width:calc(var(--u) * 330);background:var(--ink2);color:#fff;border-radius:calc(var(--u) * 14);padding:calc(var(--u) * 10) calc(var(--u) * 16);
+  font:400 calc(var(--u) * 13)/1.35 var(--text);text-align:center;opacity:0;transform:translateY(10px);transition:.3s;pointer-events:none}
+#toast.on{opacity:1;transform:none}
+#phone.dk #status b,#phone.dk #status i{color:#fff}
+#phone.nost #status{opacity:0}
+</style>
+<link rel="stylesheet" href="juego.css">
+<link rel="stylesheet" href="adopcion.css">
+<link rel="stylesheet" href="paso5.css">
+<link rel="stylesheet" href="paso6.css">
+<link rel="stylesheet" href="movil.css">
+</head>
+<body>
+<div id="stage"><div id="phone">
+  <div id="status" aria-hidden="true"><b>9:41</b><i class="msk" style="-webkit-mask-image:url(img/i_status.webp);mask-image:url(img/i_status.webp)"></i></div>
+  <div id="bar" class="hide"></div>
+  <div id="toast" role="status" aria-live="polite"></div>
+</div></div>
+
+<script>
+/* ---------- utilidades ---------- */
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const U=n=>`calc(var(--u) * ${n})`;
+const box=(x,y,w,h)=>`left:${U(x)};top:${U(y)};${w!=null?`width:${U(w)};`:''}${h!=null?`height:${U(h)};`:''}`;
+const img=(n,x,y,w,h,cls='',alt='')=>`<img class="a ${cls}" src="img/${n}.webp" alt="${alt}" style="${box(x,y,w,h)}">`;
+const ic=(n,w,h,extra='')=>`<i class="msk" style="-webkit-mask-image:url(img/${n}.webp);mask-image:url(img/${n}.webp);width:${U(w)};height:${U(h)};${extra}"></i>`;
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const phone=$('#phone');
+
+/* ---------- estado (persistente cuando el navegador lo permite) ---------- */
+const DEF={name:'',email:'',hogar:0,rutina:0,salud:0,logged:false,demoDone:false,retos:0,insignias:0,guardados:0,tipClosed:false};
+let S={...DEF};
+try{const raw=localStorage.getItem('kuska2');if(raw)S={...DEF,...JSON.parse(raw)}}catch(e){}
+const save=()=>{try{localStorage.setItem('kuska2',JSON.stringify(S))}catch(e){}};
+
+let toastT;
+function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),2600)}
+function react(el,cls='hop'){if(!el)return;el.classList.remove('hop','wiggle');void el.offsetWidth;el.classList.add(cls)}
+
+/* ---------- sonidos: cada acción tiene el suyo (WebAudio, sin archivos) ---------- */
+let AC=null,NZ=null;
+function snd(k){if(S.g&&S.g.sound===false)return;try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();const t=AC.currentTime;
+  const tone=(f,d,l,o={})=>{const os=AC.createOscillator(),g=AC.createGain();os.type=o.w||'sine';os.frequency.setValueAtTime(f,t+d);if(o.to)os.frequency.exponentialRampToValueAtTime(o.to,t+d+l);
+    const v=o.v||.11;g.gain.setValueAtTime(.0001,t+d);g.gain.exponentialRampToValueAtTime(v,t+d+(o.a||.012));g.gain.exponentialRampToValueAtTime(.0001,t+d+l);os.connect(g).connect(AC.destination);os.start(t+d);os.stop(t+d+l+.05)};
+  const noise=(d,l,f1,f2,v=.08,q=1.2)=>{if(!NZ){NZ=AC.createBuffer(1,AC.sampleRate*.6,AC.sampleRate);const c=NZ.getChannelData(0);for(let i=0;i<c.length;i++)c[i]=Math.random()*2-1}
+    const s=AC.createBufferSource(),bp=AC.createBiquadFilter(),g=AC.createGain();s.buffer=NZ;bp.type='bandpass';bp.Q.value=q;bp.frequency.setValueAtTime(f1,t+d);bp.frequency.exponentialRampToValueAtTime(f2,t+d+l);
+    g.gain.setValueAtTime(.0001,t+d);g.gain.exponentialRampToValueAtTime(v,t+d+l*.35);g.gain.exponentialRampToValueAtTime(.0001,t+d+l);s.connect(bp).connect(g).connect(AC.destination);s.start(t+d);s.stop(t+d+l+.05)};
+  ({tap:()=>tone(720,0,.05,{w:'triangle',v:.07}),
+    type:()=>tone(1500+Math.random()*300,0,.025,{w:'square',v:.018}),
+    sel:()=>{tone(520,0,.08);tone(780,.07,.11)},
+    back:()=>{tone(620,0,.07);tone(440,.06,.1)},
+    toggle:()=>{tone(880,0,.04,{w:'triangle',v:.06});tone(1180,.04,.05,{w:'triangle',v:.05})},
+    swipe:()=>noise(0,.24,700,2600,.07),
+    card:()=>{noise(0,.18,1800,600,.06,2);tone(660,.1,.14,{w:'triangle',v:.06})},
+    flip:()=>{noise(0,.3,500,3200,.07,1.5);tone(523,.22,.12);tone(784,.3,.18)},
+    slide:()=>tone(1250,0,.02,{w:'triangle',v:.03}),
+    drag:()=>tone(330,0,.12,{to:520,v:.06}),
+    give:()=>{tone(420,0,.16,{to:900,v:.08});tone(1046,.15,.12,{v:.06})},
+    hold:()=>tone(240,0,.5,{to:480,w:'triangle',v:.05,a:.05}),
+    ball:()=>{tone(260,0,.22,{to:720,v:.1});tone(900,.2,.08,{w:'triangle',v:.04})},
+    rub:()=>noise(0,.09,2400,3600,.035,3),
+    ok:()=>{tone(523,0,.12);tone(659,.1,.12);tone(784,.2,.22)},
+    casi:()=>{tone(392,0,.16);tone(330,.14,.24)},
+    sad:()=>tone(440,0,.5,{to:300,w:'triangle',v:.06,a:.04}),
+    badge:()=>{tone(523,0,.1);tone(659,.09,.1);tone(784,.18,.1);tone(1047,.27,.35)},
+    cert:()=>{[523,659,784,1047,1319].forEach((f,i)=>tone(f,i*.11,i===4?.6:.16))},
+    ring:()=>tone(660+Math.random()*80,0,.09,{w:'triangle',v:.05}),
+    pop:()=>tone(880,0,.05,{v:.08}),
+    login:()=>{tone(587,0,.1);tone(880,.09,.18)},
+    error:()=>{tone(220,0,.12,{w:'triangle',v:.08});tone(196,.1,.16,{w:'triangle',v:.08})}}[k]||(()=>{}))()}catch(e){}}
+
+/* ---------- barra del adoptante ---------- */
+const BAR=[['Inicio','ic_inicio',22,22,80.5,'inicio'],['Mi plan','ic_plan',22,16,141,'plan'],['Guardado','ic_guardado',21,19,259.75,'guardado'],['Perfil','ic_perfil',17,22,318,'perfil']];
+const cq=n=>`calc(${n}cqw / 4.02)`;
+function drawBar(on){
+  const el=$('#bar');
+  if(on==null){el.classList.add('hide');return}
+  el.innerHTML=`<div class="nb-pill"></div>${BAR.map((b,i)=>`<button class="nb-it ${i===on?'on':''}" style="left:${cq(b[4])}" data-go="${b[5]}" ${i===on?'aria-current="page"':''}><i style="-webkit-mask-image:url(img/${b[1]}.webp);mask-image:url(img/${b[1]}.webp);width:${cq(b[2])};height:${cq(b[3])}"></i><span>${b[0]}</span></button>`).join('')}
+    <button class="nb-c" id="nbc" aria-label="${S.demoDone?'Mi progreso':'Demo de situaciones'}"><img src="img/bar_logo_a.webp" alt=""></button><div class="nb-home"></div>`;
+  el.classList.remove('hide');
+  // botón central: demo (o Mi progreso con la demo certificada). Mantener apretado = atajo oculto "saltar al final".
+  const c=$('#nbc');let lp,long=false;
+  c.onpointerdown=null;
+  c.onpointerup=c.onpointerleave=()=>clearTimeout(lp);
+  c.onclick=()=>{if(long)return;snd('sel');go(S.demoDone?'progreso':'demo')};
+}
+$('#bar').addEventListener('click',e=>{const b=e.target.closest('.nb-it');if(b){snd('toggle');go(b.dataset.go)}});
+
+function finishDemo(){Object.assign(S,{demoDone:true,retos:12,insignias:3,guardados:3});save();go('inicio',{replace:true})}
+
+/* ---------- pantallas ---------- */
+const SCR={};
+
+/* 01 · Splash */
+SCR.splash={bg:'#fff',fit:true,html:()=>`
+  ${img('s01_star',20,183,364.5,392,'pop-in kuska-star')}
+  ${img('s01_word',139,575,206,52,'fadeup')}
+  <p class="a ctr p fadeup" style="${box(0,665,402)};margin:0;font-size:${U(16)};line-height:${U(26)};color:#ECCDF7;animation-delay:.25s">Juntos hacia una<br>adopción responsable</p>`,
+  mount(el){const t=setTimeout(()=>go('bienvenida',{replace:true}),2600);el.onclick=()=>{clearTimeout(t);go('bienvenida',{replace:true})};return()=>clearTimeout(t)}};
+
+/* 02 · Bienvenida */
+SCR.bienvenida={bg:'#fff',fit:true,html:()=>`
+  <h1 class="a ctr h-disp fadeup" style="${box(0,276,402)};margin:0;font-weight:500;font-size:${U(25)}">¡Bienvenido!</h1>
+  <div class="a rise" style="${box(0,284,402,590)}"><img src="img/s02_face.webp" alt="Kuska" class="kuska" style="width:100%;height:100%"></div>`,
+  mount(el){const t=setTimeout(()=>go('intro1',{replace:true}),2800);el.onclick=()=>{clearTimeout(t);go('intro1',{replace:true})};return()=>clearTimeout(t)}};
+
+/* 03 / 04 · Presentación */
+const introDots=n=>`<div class="a dots" style="${box(183,97)}"><button class="${n===1?'on':''}" data-go="intro1" aria-label="Página 1"></button><button class="${n===2?'on':''}" data-go="intro2" aria-label="Página 2"></button></div>`;
+SCR.intro1={bg:'#fff',fit:true,swipe:{left:'intro2'},html:()=>`
+  ${introDots(1)}
+  <img class="a kuska float" src="img/k03.webp" alt="Kuska" style="${box(72,152,257.5,294.5)}">
+  <h1 class="a ctr h-disp" style="${box(80,494,242)};margin:0;font-weight:500;font-size:${U(22)};line-height:${U(30)}">Adoptar empieza<br>antes de elegir</h1>
+  <p class="a ctr p" style="${box(56,584,290)};margin:0;font-size:${U(14)};line-height:${U(20)}"><b style="font-weight:500">Practicá 4 semanas de situaciones cotidianas</b> mientras Kuska crece.<br><br>Después podrás conocer<br>a quién adoptar.</p>
+  <button class="a round" data-go="intro2" aria-label="Siguiente" style="${box(294,762,50,50)}">${ic('i_arrow',26,21.5)}</button>`};
+SCR.intro2={bg:'#fff',fit:true,swipe:{right:'back'},html:()=>`
+  ${introDots(2)}
+  <img class="a kuska float" src="img/k04.webp" alt="Kuska" style="${box(70,175,250.5,271)}">
+  <h1 class="a ctr h-disp" style="${box(0,494,402)};margin:0;font-weight:500;font-size:${U(22)};line-height:${U(30)}">¡Empecemos!</h1>
+  <p class="a ctr p" style="${box(90,554,222)};margin:0;font-size:${U(14)};line-height:${U(20)}">Con tu cuenta podés hacer<br>la Demo y adoptar.</p>
+  <button class="a btn go" data-go="registro" style="${box(38,762,327,50)}"><span class="c">${ic('i_arrow',20,16.5)}</span>Comenzar aventura</button>`};
+
+/* 05–07 · Registro con tarjetas */
+const CARDS=[
+  {k:'hogar',t:'Tu hogar',q:'¿Dónde vivís?',o:['Departamento','Casa'],ic:['i_home',24,24]},
+  {k:'rutina',t:'Tu rutina',q:'¿Cuánto tiempo podrías acompañarlo durante el día?',o:['+6 horas','-6 horas'],ic:['i_cal',19,21]},
+  {k:'salud',t:'Cuidados y salud',q:'¿Podés costear controles veterinarios y vacunas?',o:['Sí','No'],ic:['i_health',24,22]}];
+const footLinks=y=>`<div class="a foot" style="${box(0,y,402)}"><button class="lnk g" data-go="invitado">Explorar como invitado</button><span class="dot">·</span><button class="lnk" data-go="asociacion">Soy asociación</button></div>`;
+SCR.registro={bg:'#F7F5FF',sbg:'#F7F5FF',html:()=>`<div class="fr" style="height:${U(1065)}">
+  <h1 class="a ctr h-disp" style="${box(0,84,402)};margin:0;font-weight:700;font-size:${U(16)}">¡Queremos conocerte!</h1>
+  <input class="a field" id="nm" maxlength="24" autocomplete="given-name" placeholder="Escribe tu nombre" aria-label="Tu nombre" value="${esc(S.name)}" style="${box(64,207,276)}">
+  <p class="a hint" id="nmh" style="${box(64,246,240)};margin:0">Contanos tu nombre para empezar</p>
+  <div class="a" id="kreg" style="${box(247,124,141.5,147)}"><img class="kuska" id="kimg" src="img/k05.webp" alt="Kuska" style="width:100%;height:100%;transform-origin:50% 100%;transition:transform .5s cubic-bezier(.3,1.3,.5,1)"></div>
+  <div class="a car" id="car" style="${box(0,321,402,300)}"><div class="track" id="trk">
+    ${CARDS.map((c,i)=>`<div class="card" data-i="${i}"><h3>${c.t}</h3><div class="q">${c.q}</div>
+      ${c.o.map((o,j)=>`<button class="op ${S[c.k]===j?'on':''}" data-k="${c.k}" data-j="${j}" style="top:${U(149+j*58)}">${o}</button>`).join('')}</div>`).join('')}
+  </div></div>
+  <div class="a cdots" id="cd" style="${box(0,665,402,53)}"><button data-d="-1" aria-label="Tarjeta anterior"></button><button class="on" id="cbig" aria-hidden="true" tabindex="-1">${CARDS.map((c,i)=>`<span data-i="${i}">${ic(...c.ic)}</span>`).join('')}</button><button data-d="1" aria-label="Tarjeta siguiente"></button></div>
+  <button class="a btn" id="crear" style="${box(37,781,327,50)}">Crear una cuenta</button>
+  <div class="a ctr" style="${box(0,848,402)}"><button class="lnk" data-go="login">¿Ya tenés una? Iniciá sesión</button></div>
+  ${footLinks(956)}</div>`,
+  mount(el){
+    let cur=0;const trk=$('#trk',el),cards=$$('.card',el),kimg=$('#kimg',el),kreg=$('#kreg',el),nm=$('#nm',el);
+    const place=()=>{const w=el.clientWidth/402;trk.style.transform=`translateX(${(53.5-cur*306)*w}px)`;
+      cards.forEach((c,i)=>{c.style.opacity=i===cur?1:.7;c.style.transform=i===cur?'none':`scale(.92) rotate(${i<cur?-3:3}deg)`});
+      $$('#cbig span',el).forEach((b,i)=>b.classList.toggle('on',i===cur));
+      // Kuska se achica a un costado del campo a partir de la segunda tarjeta (pantallas 06 y 07)
+      const tr='transition:all .5s cubic-bezier(.3,1.2,.5,1);';if(cur===0){kreg.style.cssText=tr+box(247,124,141.5,147);kimg.src='img/k05.webp'}else{kreg.style.cssText=tr+box(302,163,78.5,97.5);kimg.src='img/k06.webp'}};
+    const to=i=>{const n=Math.max(0,Math.min(2,i));if(n!==cur)snd('swipe');else snd('tap');cur=n;place()};
+    place();addEventListener('resize',place);
+    $('#cd',el).onclick=e=>{const b=e.target.closest('button[data-d]');if(b)to((cur+(+b.dataset.d)+3)%3)};
+    $('#car',el).addEventListener('click',e=>{
+      const op=e.target.closest('.op');const card=e.target.closest('.card');
+      if(card&&+card.dataset.i!==cur){to(+card.dataset.i);return}
+      if(op){snd('sel');S[op.dataset.k]=+op.dataset.j;save();$$(`.op[data-k="${op.dataset.k}"]`,el).forEach(b=>b.classList.toggle('on',b===op));react(kimg);
+        if(cur<2)setTimeout(()=>to(cur+1),520)}});
+    // deslizar tarjetas
+    let x0=null;const car=$('#car',el);
+    car.addEventListener('pointerdown',e=>{x0=e.clientX});
+    car.addEventListener('pointermove',e=>{if(x0==null)return;const dx=e.clientX-x0;if(Math.abs(dx)>8){trk.classList.add('drag');const w=el.clientWidth/402;trk.style.transform=`translateX(${(53.5-cur*306)*w+dx*.85}px)`}});
+    const endDrag=e=>{if(x0==null)return;const dx=e.clientX-x0;x0=null;trk.classList.remove('drag');if(Math.abs(dx)>40)to(cur+(dx<0?1:-1));else place()};
+    car.addEventListener('pointerup',endDrag);car.addEventListener('pointercancel',()=>{x0=null;trk.classList.remove('drag');place()});
+    // Kuska reacciona cuando escribís tu nombre
+    let lt=0;nm.addEventListener('input',()=>{S.name=nm.value.trim();save();nm.classList.remove('err');$('#nmh',el).classList.remove('on');snd('type');const n=Date.now();if(n-lt>350){react(kimg);lt=n}});
+    kimg.onclick=()=>{snd('pop');react(kimg,'wiggle')};
+    $('#crear',el).onclick=()=>{
+      if(!nm.value.trim()){snd('error');nm.classList.add('err');$('#nmh',el).classList.add('on');react(nm,'shake');nm.focus();react(kimg,'wiggle');return}
+      S.name=nm.value.trim();if(typeof chooseStart==='function'){save();snd('login');chooseStart();return}S.created=true;S.logged=true;save();snd('login');go('inicio',{root:true})};
+    return()=>removeEventListener('resize',place);
+  }};
+
+/* 08 · Iniciar sesión */
+SCR.login={bg:'#fff',sbg:'#F7F5FF',fit:true,html:()=>`
+  <svg class="a" viewBox="0 0 402 344" preserveAspectRatio="none" style="${box(0,0,402,345)}" aria-hidden="true"><path fill="#F7F5FF" d="M0 0V275L10 273L20 272.5L30 272.5L40 273.5L50 275L60 278L70 281.5L80 286.5L90 292.5L100 299.5L110 307L120 314.5L130 322L140 328L150 333.5L160 337.5L170 340.5L180 342.5L190 343.5L201 344L212 343.5L222 342.5L232 340.5L242 337.5L252 333.5L262 328L272 322L282 314.5L292 307L302 299.5L312 292.5L322 286.5L332 281.5L342 278L352 275L362 273.5L372 272.5L382 272.5L392 273L402 275V0Z"/></svg>
+  <h1 class="a ctr h-disp" style="${box(0,84,402)};margin:0;font-weight:700;font-size:${U(16)}">Iniciar sesión</h1>
+  <img class="a kuska float" id="k8" src="img/k08.webp" alt="Kuska" style="${box(114,149,195.5,196.5)}">
+  <input class="a field" id="em" type="email" autocomplete="email" placeholder="Email" aria-label="Email" value="${esc(S.email)}" style="${box(38,388,325)}">
+  <input class="a field" id="pw" type="password" autocomplete="current-password" placeholder="Contraseña" aria-label="Contraseña" style="${box(38,468,325)};padding-right:${U(40)}">
+  <button class="a eye" id="eye" aria-label="Mostrar contraseña" style="${box(337,466,32,28)}">${ic('i_eye',23,19)}</button>
+  <p class="a hint" id="lh" style="${box(38,520,325)};margin:0"></p>
+  <button class="a btn" id="entrar" style="${box(37,621,327,50)}">Iniciar sesión</button>
+  <div class="a ctr" style="${box(0,688,402)}"><button class="lnk" data-go="registro">¿No tenés cuenta? Creá una</button></div>
+  ${footLinks(790)}`,
+  mount(el){
+    const pw=$('#pw',el),em=$('#em',el),eye=$('#eye',el),h=$('#lh',el),k=$('#k8',el);
+    eye.onclick=()=>{snd('toggle');const v=pw.type==='password';pw.type=v?'text':'password';eye.classList.toggle('on',v);eye.setAttribute('aria-label',v?'Ocultar contraseña':'Mostrar contraseña')};
+    pw.addEventListener('focus',()=>react(k,'wiggle'));
+    k.onclick=()=>{snd('pop');react(k)};
+    [em,pw].forEach(i=>i.addEventListener('input',()=>{i.classList.remove('err');h.classList.remove('on')}));
+    $('#entrar',el).onclick=()=>{
+      const okE=/^\S+@\S+\.\S+$/.test(em.value.trim()),okP=pw.value.length>0;
+      if(!okE||!okP){snd('error');h.textContent=!okE?'Escribí un email válido':'Escribí tu contraseña';h.classList.add('on');(okE?pw:em).classList.add('err');react(okE?pw:em,'shake');react(k,'wiggle');return}
+      S.email=em.value.trim();if(!S.name){const n=S.email.split('@')[0].split(/[._-]/)[0];S.name=n.charAt(0).toUpperCase()+n.slice(1)}
+      S.logged=true;save();snd('login');go('inicio',{root:true})};
+  }};
+
+/* 10 / 11 · Inicio */
+SCR.inicio={bg:'#F7F5FF',sbg:'#F7F5FF',bar:0,html:()=>{
+  const d=S.demoDone&&(typeof certOK!=='function'||certOK()), top=d?135:0, H=d?1278:1420, st=S.g?(S.g.done?3:Math.min(3,Math.floor((S.g.prog||0)/3))):0;
+  const qy=992-top, fy=1121-top;
+  return `<div class="fr" style="height:${U(H)}">
+  <p class="a p" style="${box(19,80)};margin:0;font-size:${U(13)};color:#5644B6">Hola,</p>
+  <h1 class="a h-disp" style="${box(19,98)};margin:0;font-weight:700;font-size:${U(26)};max-width:${U(320)};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(S.name||'Emma')}</h1>
+  <button class="a bell" data-toast="Tus notificaciones llegan en el paso 5" aria-label="Notificaciones" style="${box(357,82,24,26)}">${ic('i_bell',19,21.5)}</button>
+
+  <div class="a hero" style="${box(20,160,362,170)}">
+    ${d?`<p class="a h-disp" style="${box(16,33)};margin:0;font-weight:700;font-size:${U(15)}">¡MISIÓN CUMPLIDA!</p>
+      <p class="a p" style="${box(18,63,215)};margin:0;font-size:${U(12)};line-height:${U(18)};color:#5644B6">Completaste tu aprendizaje y estás listo para una nueva aventura.</p>
+      <button class="a mini" data-toast="El catálogo se arma en el paso 4" style="${box(16,119,138,34)};font-size:${U(13.5)}">Conocer animales</button>
+      ${img('h11_kuska',231.5,21.5,125.5,129.5,'kuska float','Kuska festejando')}`
+    :`<p class="a h-disp" style="${box(16,33)};margin:0;font-weight:700;font-size:${U(15)}">¡Tu aventura empieza acá!</p>
+      <p class="a p" style="${box(18,63,196)};margin:0;font-size:${U(12)};line-height:${U(18)};color:#5644B6">Explorá la demo y descubrí cómo prepararte para adoptar.</p>
+      <button class="a mini" data-go="demo" style="${box(18,128,100,25)}">Realizar Demo</button>
+      ${img('h10_star',225,16,139.5,137.5,'float')}`}
+  </div>
+
+  <p class="a p" style="${box(20,378)};margin:0;font-size:${U(10)};font-weight:500;color:var(--ink)">${d?'DEMO COMPLETADA':`SEMANA ${Math.min(4,st+1)} · ${['CUIDAR','COMPRENDER','CONVIVIR','SOSTENER'][Math.min(3,st)]}`}</p>
+  <p class="a p" style="${box(20,398)};margin:0;font-size:${U(10)};color:#6B6580">Reto ${d?12:Math.min(S.retos+1,12)} de 12</p>
+  <div class="a kcard" style="${box(20,464,362,298)}"></div>
+  ${d||st===3?img('kst_4',141,394,119.5,147.5,'kuska','Kuska adulto'):st===0?img('kst_1',141,393,120.5,148.5,'kuska','Kuska cachorro'):img(st===1?'g_k2':'g_k3',141,393,120.5,148.5,'kuska','Kuska')}
+  <div class="a bar" style="${box(101,563,200,6)}"><i style="width:${d?100:Math.round(S.retos/12*100)}%"></i></div>
+  <p class="a ctr h-disp" style="${box(0,578,402)};margin:0;font-weight:600;font-size:${U(16)};color:var(--ink2)">Kuska es ${d?'adulto':['cachorro','adolescente','adulto joven','adulto'][st]}</p>
+  <div class="a stats ${d?'done':''}" style="${box(36,638,331,100)}">
+    <div><b>${S.retos}/12</b><span>Retos hechos</span></div>
+    <div><b>${S.insignias}/4</b><span>Insignias</span></div>
+    <button data-go="guardado"><b>${S.guardados}</b><span>Guardados</span></button>
+  </div>
+
+  ${d?'':`<div class="a tip ${S.tipClosed?'gone':''}" id="tip" style="${box(18,800,366,95)}">
+    <button class="a x" id="tipx" aria-label="Cerrar consejo" style="${box(2,4,13,13)}"><svg width="55%" height="55%" viewBox="0 0 10 10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2 2l6 6M8 2l-6 6"/></svg></button>
+    ${img('k10_tip',17,6,70,87.5,'kuska','Kuska')}
+    <div class="a bubble" style="${box(92,29,272,49)}"><span>Necesitas completar un <b>80% o más</b><br>para poder adoptar.</span></div></div>`}
+
+  <h2 class="a h-disp" style="${box(20,qy-52)};margin:0;font-weight:700;font-size:${U(20)}">¿Qué quieres hacer hoy?</h2>
+  ${[['Explorar','q_explorar',23,22.5,'El catálogo se arma en el paso 4'],['Aprender','q_aprender',19,18.5,'Aprender se arma en el paso 5'],['Red y<br>Comunidad','q_red',24,20,'Red y Comunidad se arma en el paso 5'],['Mi progreso','q_progreso',22,22,null]]
+    .map((t,i)=>`<button class="a tile" ${t[4]?`data-toast="${t[4]}"`:'data-go="progreso"'} style="${box(20+i*94,qy,81,82)};padding-top:${U(t[0].includes('<br>')?13:15)}">${ic(t[1],t[2],t[3])}<span style="margin-top:${U(t[0].includes('<br>')?6:10)}">${t[0]}</span></button>`).join('')}
+
+  <h2 class="a h-disp" style="${box(20,fy)};margin:0;font-weight:700;font-size:${U(20)}">Amigos que buscan hogar</h2>
+  <div class="a ${d?'':'locked'}" id="fr" style="${box(0,fy+52,402,100)}">
+    <div class="friends">${['pet0','pet1','pet2'].map((p,i)=>`<button aria-label="Amigo ${i+1}"><img src="img/${p}.webp" alt=""></button>`).join('')}</div>
+    ${d?'':`<img class="a" id="lock" src="img/lockc.webp" alt="" style="${box(184,12,34,34)};pointer-events:none">
+      <p class="a ctr p" style="${box(0,64,402)};margin:0;font-size:${U(15)};font-weight:400;color:var(--ink2);pointer-events:none">Se desbloquea al terminar la Demo</p>`}
+  </div></div>`},
+  mount(el){
+    $$('.kuska',el).forEach(k=>k.onclick=()=>react(k,Math.random()<.5?'hop':'wiggle'));
+    const tx=$('#tipx',el);if(tx)tx.onclick=()=>{$('#tip',el).classList.add('gone');S.tipClosed=true;save()};
+    $('#fr',el).onclick=e=>{if(!e.target.closest('button'))return;
+      if(S.demoDone)toast('La ficha de cada animal se arma en el paso 4');
+      else{react($('#lock',el),'shake');toast('Se desbloquea al terminar la Demo')}};
+    const bar=$('.bar i',el);if(S.demoDone&&bar){bar.style.width='0%';requestAnimationFrame(()=>requestAnimationFrame(()=>bar.style.width='100%'))}
+  }};
+
+/* 12 · Mi plan (vacío antes de la demo) */
+SCR.plan={bg:'#F7F5FF',sbg:'#F7F5FF',fit:true,bar:1,html:()=>`
+  <button class="a ib" data-go="back" aria-label="Volver" style="${box(20,76,30,30)}">${ic('i_back',17,14,'margin:auto')}</button>
+  <h1 class="a ctr h-disp" style="${box(0,80,402)};margin:0;font-weight:700;font-size:${U(16)};color:var(--ink2);pointer-events:none">Mi Plan</h1>
+  <button class="a bell" data-toast="Tus notificaciones llegan en el paso 5" aria-label="Notificaciones" style="${box(357,78,24,26)}">${ic('i_bell',19,21.5)}</button>
+  <div class="a seg" id="seg" style="${box(24,156,345,44)}"><i></i><button class="on" style="width:${U(172)}">En evaluación</button><button style="width:${U(173)}">Adopción confirmada</button></div>
+  <img class="a kuska float" id="k12" src="img/k12.webp" alt="Kuska" style="${box(125.5,265.5,150.5,186.5)}">
+  <h2 class="a ctr h-disp" id="pt" style="${box(0,484,402)};margin:0;font-weight:600;font-size:${U(17)};line-height:${U(21)};color:var(--ink2)">Tu plan se arma<br>después de la demo</h2>
+  <p class="a ctr p" id="pb" style="${box(50,538,302)};margin:0;font-size:${U(14)};line-height:${U(19.5)};color:#6B6496">Cuando termines los 12 retos vas a poder sumar animales y armar un plan de cuidados para cada uno.</p>
+  <button class="a btn" data-go="demo" style="${box(38,679,327,50)}">Ir a la Demo</button>`,
+  mount(el){
+    const seg=$('#seg',el),i=$('i',seg),bs=$$('button',seg);
+    const set=n=>{bs.forEach((b,j)=>b.classList.toggle('on',j===n));i.style.width=bs[n].offsetWidth+'px';i.style.transform=`translateX(${bs[n].offsetLeft}px)`};
+    requestAnimationFrame(()=>set(0));addEventListener('resize',()=>set(bs.findIndex(b=>b.classList.contains('on'))));
+    bs.forEach((b,n)=>b.onclick=()=>{set(n);react($('#k12',el))});
+    $('#k12',el).onclick=e=>react(e.target,'wiggle');
+  }};
+
+/* Pantallas de pasos siguientes (temporales, solo para esta revisión) */
+const SOON={
+  demo:{t:'La demo de 12 retos',s:'Se arma en el paso 3. Mientras tanto podés ver cómo queda el Inicio al terminarla.',cta:'Ver Inicio con la demo completada',act:'finish'},
+  progreso:{t:'Mi progreso',s:'Se arma en el paso 3, junto con la demo, el diario y las insignias.'},
+  guardado:{t:'Guardados',s:'Se arma en el paso 4, junto con el catálogo.'},
+  catalogo:{t:'Animales en adopción',s:'Es lo próximo que armo (paso 4): órbita y lista de gatos y perros, ficha del animal y postulación.'},
+  perfil:{t:'Perfil',s:'Se arma en el paso 5. Para revisar desde cero podés reiniciar la demo acá.',cta:'Reiniciar la demo',act:'reset'},
+  invitado:{t:'Modo invitado',s:'Se arma en el paso 5, con Catálogo, Conocé KUSKA, Aprender y Red.',nobar:true},
+  asociacion:{t:'Perfil asociación',s:'Se arma en el paso 6, con su propia barra.',nobar:true}};
+for(const [k,v] of Object.entries(SOON)){
+  SCR[k]={bg:'#F7F5FF',sbg:'#F7F5FF',fit:true,bar:v.nobar?null:({guardado:2,perfil:3}[k]??null),html:()=>`
+    <button class="a ib" data-go="back" aria-label="Volver" style="${box(20,76,30,30)}">${ic('i_back',17,14,'margin:auto')}</button>
+    <h1 class="a ctr h-disp" style="${box(0,80,402)};margin:0;font-weight:700;font-size:${U(16)};color:var(--ink2);pointer-events:none">${v.t}</h1>
+    <img class="a kuska float" src="img/k12.webp" alt="Kuska" style="${box(125.5,215,150.5,186.5)}">
+    <p class="a ctr h-disp" style="${box(40,440,322)};margin:0;font-weight:600;font-size:${U(17)};color:var(--ink2)">Próximamente</p>
+    <p class="a ctr p" style="${box(50,472,302)};margin:0;font-size:${U(14)};line-height:${U(20)};color:#6B6496">${v.s}</p>
+    ${v.cta?`<button class="a btn" id="cta" style="${box(38,600,327,50)}">${v.cta}</button>`:''}`,
+    mount(el){const c=$('#cta',el);if(c)c.onclick=()=>{if(v.act==='finish')finishDemo();else{S={...DEF};save();go('splash',{root:true})}};
+      const k=$('.kuska',el);k.onclick=()=>react(k,'wiggle')}};
+}
+
+/* ---------- navegación con historial (el botón atrás del navegador funciona) ---------- */
+let curEl=null,cleanup=null,idx=0;
+function render(name,dir=1){
+  const def=SCR[String(name).split('?')[0]]||SCR.splash;
+  if(cleanup){try{cleanup()}catch(e){}cleanup=null}
+  const el=document.createElement('div');el.className='scr in';el.style.setProperty('--bg',def.bg);el.style.setProperty('--dx',dir);
+  el.innerHTML=def.fit?`<div class="fr fit">${def.html()}</div>`:def.html();
+  phone.insertBefore(el,$('#status'));
+  phone.style.setProperty('--sbg',def.sbg||'transparent');phone.classList.toggle('dk',!!def.dark);phone.classList.toggle('nost',!!def.nostatus);
+  if(curEl){const old=curEl;old.style.setProperty('--dx',dir);old.classList.remove('in');old.classList.add('out');setTimeout(()=>old.remove(),320)}
+  curEl=el;el.addEventListener('animationend',()=>el.classList.remove('in'),{once:true});
+  drawBar(def.bar);
+  if(def.swipe){let x0=null;el.addEventListener('pointerdown',e=>x0=e.clientX);el.addEventListener('pointerup',e=>{if(x0==null)return;const dx=e.clientX-x0;x0=null;
+    if(dx<-50&&def.swipe.left){snd('swipe');go(def.swipe.left)}if(dx>50&&def.swipe.right){snd('swipe');def.swipe.right==='back'?history.back():go(def.swipe.right)}})}
+  cleanup=def.mount?def.mount(el)||null:null;
+}
+function go(name,o={}){
+  if(name==='back'){if(idx>0)history.back();else go(S.logged?'inicio':'registro',{replace:true});return}
+  if(name==='inicio'&&!S.logged){S.logged=true;save()}
+  if(o.root||o.replace){history.replaceState({s:name,i:idx},'','#'+name)}
+  else{idx++;history.pushState({s:name,i:idx},'','#'+name)}
+  render(name,1);
+}
+addEventListener('popstate',e=>{const st=e.state||{s:(location.hash.slice(1)||'splash'),i:0};const dir=st.i<idx?-1:1;idx=st.i||0;render(st.s,dir)});
+document.addEventListener('click',e=>{
+  const g=e.target.closest('[data-go]');if(g&&!g.closest('#bar')){e.preventDefault();snd(g.dataset.go==='back'?'back':/intro|registro/.test(g.dataset.go)?'swipe':'tap');go(g.dataset.go);return}
+  const t=e.target.closest('[data-toast]');if(t)toast(t.dataset.toast)});
+
+/* arranque */
+document.addEventListener('DOMContentLoaded',function(){
+  const h=location.hash.slice(1);
+  const start=SCR[h.split('?')[0]]&&h!=='splash'?h:'splash';
+  history.replaceState({s:start,i:0},'','#'+start);render(start,1);
+});
+</script>
+<script src="juego.js"></script>
+<script src="adopcion.js"></script>
+<script src="paso5.js"></script>
+<script src="paso6.js"></script>
+<script src="paso7.js"></script>
+</body>
+</html>
